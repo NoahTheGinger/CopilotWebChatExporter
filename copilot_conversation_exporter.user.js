@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Copilot Conversation Exporter
 // @author       NoahTheGinger
-// @namespace    https://github.com/NoahTheGinger/Microsoft-Copilot-Web-Chat-Exporter-Userscript/
+// @namespace    https://github.com/NoahTheGinger/CopilotWebChatExporter/
 // @version      0.2
 // @description  Adds a button to export a conversation from copilot.microsoft.com as a nicely formatted Markdown file.
 // @match        https://copilot.microsoft.com/*
