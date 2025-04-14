@@ -2,6 +2,8 @@
 
 A simple Tampermonkey userscript that adds an **Export Chat (MD)** button to [copilot.microsoft.com](https://copilot.microsoft.com). This button lets you quickly export your Copilot conversation as a nicely formatted Markdown file.
 
+![Copilot web chat exporter demo](https://github.com/user-attachments/assets/f7c880d3-266b-4eec-8f1e-7ac666b303be)
+
 ## Features
 
 - **Automatic Export:** Scans the conversation for user and Copilot messages and converts them to Markdown.
