@@ -2,8 +2,8 @@
 // @name         Copilot Conversation Exporter
 // @author       NoahTheGinger
 // @namespace    https://github.com/NoahTheGinger/CopilotWebChatExporter/
-// @version      0.3.1
-// @description  Adds a button to export a conversation from copilot.microsoft.com as a nicely formatted Markdown file.
+// @version      0.3.2
+// @description  Export Copilot chats as nicely formatted Markdown files.
 // @match        https://copilot.microsoft.com/*
 // @license      MIT
 // @grant        none
@@ -13,12 +13,12 @@
   'use strict';
 
   /* ----------------------------------------------------------
-     NEW & IMPROVED: derive a good conversation title
+     Return BOTH a pretty header and a safe filename
   ---------------------------------------------------------- */
-  function getConversationTitle() {
+  function getConversationTitles() {
     let raw = '';
 
-    // Sidebar: the currently selected conversation (most reliable)
+    // Sidebar selected conversation
     const selected = document.querySelector('[role="option"][aria-selected="true"]');
     if (selected) {
       raw =
@@ -26,26 +26,29 @@
         (selected.getAttribute('aria-label') || '').split(',').slice(1).join(',').trim();
     }
 
-    // <title> fallback (remove Copilot boilerplate)
+    // <title> fallback
     if (!raw) {
       raw = (document.title || '')
-        .replace(/^\s*Microsoft[_\s-]*Copilot.*$/i, '')               // “Microsoft Copilot — Your AI companion”
-        .replace(/\s*[-–|]\s*Copilot.*$/i, '')                        // “… – Copilot”
+        .replace(/^\s*Microsoft[_\s-]*Copilot.*$/i, '')
+        .replace(/\s*[-–|]\s*Copilot.*$/i, '')
         .trim();
     }
 
-    // Final fallback
-    if (!raw) raw = 'copilot_conversation';
+    if (!raw) raw = 'Copilot Conversation';
 
-    // Sanitize: remove forbidden chars & tidy up
-    return raw
-      .replace(/[\\/:*?"<>|]/g, '')
+    // Header: keep spaces, drop only forbidden chars
+    const header = raw.replace(/[\\/:*?"<>|]/g, '').trim();
+
+    // File name: stricter – spaces→underscores etc.
+    const file = header
       .replace(/\s+/g, '_')
-      .substring(0, 100);
+      .substring(0, 100)
+      .toLowerCase(); // optional lower-casing
+
+    return { header, file };
   }
 
   /* (unchanged) nodeToMarkdown … */
-
   function nodeToMarkdown(node) {
     if (node.nodeType === Node.TEXT_NODE) return node.textContent;
     if (node.nodeType !== Node.ELEMENT_NODE) return '';
@@ -79,17 +82,21 @@
     }
   }
 
-  /* (tweak) use new filename */
+  /* ----------------------------------------------------------
+     Export logic – header & filename switched
+  ---------------------------------------------------------- */
   function exportConversation() {
     const messages = document.querySelectorAll(
-      '[data-content="user-message"], [data-content="ai-message"]',
+      '[data-content="user-message"], [data-content="ai-message"]'
     );
     if (!messages.length) {
       alert('No conversation messages found!');
       return;
     }
 
-    let mdOutput = '# Copilot Conversation\n\n';
+    const { header, file } = getConversationTitles();
+    let mdOutput = `# ${header}\n\n`;
+
     messages.forEach(msg => {
       const role = msg.getAttribute('data-content') === 'user-message' ? 'User' : 'Copilot';
       let contentMarkdown = nodeToMarkdown(msg).trim();
@@ -99,17 +106,14 @@
 
     const blob = new Blob([mdOutput], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
-    const a = Object.assign(document.createElement('a'), {
-      href: url,
-      download: `${getConversationTitle()}.md`,
-    });
+    const a = Object.assign(document.createElement('a'), { href: url, download: `${file}.md` });
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
 
-  /* (unchanged) UI button */
+  /* (unchanged) add button */
   function addExportButton() {
     const btn = Object.assign(document.createElement('button'), { textContent: 'Export Chat (MD)' });
     Object.assign(btn.style, {
